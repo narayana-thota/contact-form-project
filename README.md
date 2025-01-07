@@ -35,5 +35,5 @@ The Contact Form Project is a web-based application designed to collect user det
 ## 📋 Setup Instructions
 Follow these steps to set up the project locally:
 
-1. **Clone the Retory:**
-https://github.com/narayana-thota/contact-form-project
+1. **Clone the Repository:**
+   https://github.com/narayana-thota/contact-form-project
