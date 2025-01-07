@@ -37,3 +37,16 @@ Follow these steps to set up the project locally:
 
 1. **Clone the Repository:**
    https://github.com/narayana-thota/contact-form-project
+   
+2.Navigate to the Project Directory:
+   cd contactform-backend
+3.Install Dependencies:
+    npm install
+4.Configure MongoDB:
+Use your MongoDB Atlas connection string or local MongoDB.
+Example Connection String:
+ mongodb+srv://<user_name>:<password>@cluster1.p4s9x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1
+Update .env or configuration files with your database credentials.
+
+
+
