@@ -63,6 +63,12 @@ Live Demo Link: [https://guileless-zuccutto-8d3554.netlify.app/]
 Thota Om Sada Siva Venkata Narayana
 ## 📄 License
 This project is licensed under the MIT License. Feel free to use, modify, and distribute this project.
+## 💡 Future Enhancements
+Add a CAPTCHA for spam protection.
+Implement email notifications for form submissions.
+Create an admin dashboard for viewing and managing form entries.
+Add a feature for exporting data to CSV or Excel format.
+
 
 
 
