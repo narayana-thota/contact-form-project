@@ -29,6 +29,9 @@ The Contact Form Project is a web-based application designed to collect user det
 
 ### Database:
 - **MongoDB Atlas** and **Local MongoDB**
+- This is how the user Data can be Stored in mongoDB database
+![Example Image](https://i.postimg.cc/qRkVHxyw/Screenshot-2025-01-08-143904.png)
+
 
 ### Deployment:
 - **Render**
