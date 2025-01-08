@@ -61,6 +61,8 @@ The project is deployed using Render for online accessibility.
 Live Demo Link: [https://guileless-zuccutto-8d3554.netlify.app/]
 ## 👨‍💻 Developed BY
 Thota Om Sada Siva Venkata Narayana
+## 📄 License
+This project is licensed under the MIT License. Feel free to use, modify, and distribute this project.
 
 
 
