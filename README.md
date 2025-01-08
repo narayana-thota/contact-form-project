@@ -52,6 +52,8 @@ Use your MongoDB Atlas connection string or local MongoDB.
 Example Connection String:
  mongodb+srv://<user_name>:<password>@cluster1.p4s9x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1
  -Update .env or configuration files with your database credentials.
+5. Start the Development Server:
+   npm install
 
 
 
