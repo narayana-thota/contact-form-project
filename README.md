@@ -53,7 +53,9 @@ Example Connection String:
  mongodb+srv://<user_name>:<password>@cluster1.p4s9x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1
  -Update .env or configuration files with your database credentials.
 5. Start the Development Server:
-   npm install
+   npm start
+6. Access the Application: Open your browser and navigate to:http://localhost:3000
+
 
 
 
