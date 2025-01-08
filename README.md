@@ -59,6 +59,8 @@ Example Connection String:
 The project is deployed using Render for online accessibility.
 
 Live Demo Link: [https://guileless-zuccutto-8d3554.netlify.app/]
+## 👨‍💻 Developed BY
+Thota Om Sada Siva Venkata Narayana
 
 
 
