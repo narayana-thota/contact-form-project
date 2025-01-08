@@ -55,6 +55,10 @@ Example Connection String:
 5. Start the Development Server:
    npm start
 6. Access the Application: Open your browser and navigate to:http://localhost:3000
+📦 Deployment
+The project is deployed using Render for online accessibility.
+
+Live Demo Link: [https://guileless-zuccutto-8d3554.netlify.app/]
 
 
 
