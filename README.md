@@ -20,7 +20,7 @@ The Contact Form Project is a web-based application designed to collect user det
 - **CSS**
 - **JavaScript**
 This is my front end image of the contact form user can fill their details in this form
-![Example Image](https://postimg.cc/ZBwYPwGF)
+![Example Image](https://i.postimg.cc/5yVHVGpG/Screenshot-2025-01-08-143949.png)
 
 
 ### Backend:
