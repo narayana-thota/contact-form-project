@@ -64,10 +64,10 @@ Thota Om Sada Siva Venkata Narayana
 ## 📄 License
 This project is licensed under the MIT License. Feel free to use, modify, and distribute this project.
 ## 💡 Future Enhancements
-Add a CAPTCHA for spam protection.
-Implement email notifications for form submissions.
-Create an admin dashboard for viewing and managing form entries.
-Add a feature for exporting data to CSV or Excel format.
+1. Add a CAPTCHA for spam protection.
+2. Implement email notifications for form submissions.
+3. Create an admin dashboard for viewing and managing form entries.
+4. Add a feature for exporting data to CSV or Excel format.
 
 
 
