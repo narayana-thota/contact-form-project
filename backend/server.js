@@ -71,8 +71,9 @@ app.post('/contact', async (req, res) => {
 
     // --- Step 2: Send the email notification via Zoho ---
     const mailOptions = {
-        from: `"Portfolio Site" <${process.env.EMAIL_USER}>`, // From your Zoho email
-        to: process.env.PORTFOLIO_OWNER_EMAIL,             // To your personal inbox
+        // THIS IS THE ONLY LINE I CHANGED
+        from: process.env.EMAIL_USER, // From your Zoho email
+        to: process.env.PORTFOLIO_OWNER_EMAIL,           // To your personal inbox
         subject: `🚀 New Contact Form Submission from ${name}`,
         html: `
             <h2>You have a new message from your portfolio:</h2>
