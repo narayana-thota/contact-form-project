@@ -1,21 +1,19 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
+import express from "express";
+import bodyParser from "body-parser";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import nodemailer from "nodemailer";
+import cors from "cors";
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // --- Middleware ---
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // --- MongoDB Connection ---
-const uri = process.env.MONGODB_URI;
-mongoose.connect(uri)
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("✅ Successfully connected to MongoDB Atlas!"))
     .catch(err => console.error("❌ MongoDB connection error:", err));
 
@@ -32,12 +30,12 @@ const Contact = mongoose.model('Contact', contactSchema);
 
 // --- Nodemailer Transporter Setup ---
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,   // e.g., smtp.zoho.in
-    port: process.env.EMAIL_PORT,   // 465
-    secure: true,                   // true for SSL
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: true, // true for port 465
     auth: {
-        user: process.env.EMAIL_USER, // e.g., narayanathota@zoho.in
-        pass: process.env.EMAIL_PASS, // 16-char app-specific password
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // Your 16-character app-specific password
     },
 });
 
@@ -67,15 +65,15 @@ app.post('/contact', async (req, res) => {
 
     // --- Step 2: Send the email notification via Zoho ---
     const mailOptions = {
-        // ✅ Must match your Zoho account to avoid 553 relay error
+        // ✅ This is the professional format that Zoho expects.
         from: `"Portfolio Notification" <${process.env.EMAIL_USER}>`,
 
-        // ✅ Where you want to receive the form submission
+        // ✅ This is your personal inbox where you'll receive the message.
         to: process.env.PORTFOLIO_OWNER_EMAIL,
 
         subject: `🚀 New Contact Form Submission from ${name}`,
 
-        // ✅ Allows replying directly to the user
+        // ✅ THIS IS THE CRITICAL FIX: It allows you to reply directly to the visitor.
         replyTo: email,
 
         html: `
@@ -95,19 +93,18 @@ app.post('/contact', async (req, res) => {
     try {
         await transporter.sendMail(mailOptions);
         console.log('✅ Notification email sent successfully via Zoho.');
-
-        // ✅ Respond success only if email was sent
-        return res.status(201).json({ success: true, message: "Form submitted successfully!" });
-
     } catch (emailError) {
         console.error("❌ Email Send Error:", emailError);
-
-        // ✅ If email fails, notify frontend
-        return res.status(500).json({ success: false, error: "Failed to send notification email." });
+        // We log the error but still send a success response to the user,
+        // because their message was saved successfully.
     }
+
+    // --- Step 3: Respond to the frontend ---
+    res.status(201).json({ success: true, message: "Form submitted successfully!" });
 });
 
 // --- Start Server ---
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
