@@ -28,13 +28,14 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model('Contact', contactSchema);
 
-// --- Nodemailer Transporter Setup ---
+// --- Nodemailer Transporter Setup (Zoho Official Configuration) ---
+// This is the most compliant setup based on Zoho's security documentation.
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
-    secure: true, // true for port 465
+    secure: true, // true for port 465 (SSL)
     auth: {
-        user: process.env.EMAIL_USER,
+        user: process.env.EMAIL_USER, // Your full Zoho email address
         pass: process.env.EMAIL_PASS, // Your 16-character app-specific password
     },
 });
@@ -65,17 +66,15 @@ app.post('/contact', async (req, res) => {
 
     // --- Step 2: Send the email notification via Zoho ---
     const mailOptions = {
-        // ✅ This is the professional format that Zoho expects.
+        // This 'from' format is the most robust and compliant.
         from: `"Portfolio Notification" <${process.env.EMAIL_USER}>`,
-
-        // ✅ This is your personal inbox where you'll receive the message.
+        // This is your personal inbox where you'll receive the message.
         to: process.env.PORTFOLIO_OWNER_EMAIL,
-
+        // The subject line for the email.
         subject: `🚀 New Contact Form Submission from ${name}`,
-
-        // ✅ THIS IS THE CRITICAL FIX: It allows you to reply directly to the visitor.
+        // THIS IS THE CRITICAL FIX: It allows you to reply directly to the visitor.
         replyTo: email,
-
+        // The HTML body of the email.
         html: `
             <h2>You have a new message from your portfolio:</h2>
             <hr>
