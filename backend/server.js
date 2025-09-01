@@ -1,3 +1,4 @@
+
 import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
@@ -26,27 +27,26 @@ const contactSchema = new mongoose.Schema({
     submittedAt: { type: Date, default: Date.now }
 });
 
-const Contact = mongoose.model('Contact', contactSchema);
+const Contact = mongoose.model("Contact", contactSchema);
 
-// --- Nodemailer Transporter Setup (Zoho Official Configuration) ---
-// This is the most compliant setup based on Zoho's security documentation.
+// --- Nodemailer Transporter Setup ---
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: true, // true for port 465 (SSL)
+    port: Number(process.env.EMAIL_PORT),
+    secure: true, // SSL required for port 465
     auth: {
-        user: process.env.EMAIL_USER, // Your full Zoho email address
-        pass: process.env.EMAIL_PASS, // Your 16-character app-specific password
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS, // App-specific password from Zoho
     },
 });
 
 // --- API Routes ---
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
     res.send("🚀 Welcome to the Contact Form API!");
 });
 
 // Main endpoint to handle form submissions
-app.post('/contact', async (req, res) => {
+app.post("/contact", async (req, res) => {
     const { name, email, phone, message } = req.body;
 
     // Basic validation
@@ -66,15 +66,10 @@ app.post('/contact', async (req, res) => {
 
     // --- Step 2: Send the email notification via Zoho ---
     const mailOptions = {
-        // This 'from' format is the most robust and compliant.
-        from: `"Portfolio Notification" <${process.env.EMAIL_USER}>`,
-        // This is your personal inbox where you'll receive the message.
-        to: process.env.PORTFOLIO_OWNER_EMAIL,
-        // The subject line for the email.
+        from: process.env.EMAIL_USER, // Must always be your verified Zoho email
+        to: process.env.PORTFOLIO_OWNER_EMAIL, // Your personal inbox
         subject: `🚀 New Contact Form Submission from ${name}`,
-        // THIS IS THE CRITICAL FIX: It allows you to reply directly to the visitor.
-        replyTo: email,
-        // The HTML body of the email.
+        replyTo: email, // Visitor’s email so you can reply directly
         html: `
             <h2>You have a new message from your portfolio:</h2>
             <hr>
@@ -91,11 +86,10 @@ app.post('/contact', async (req, res) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('✅ Notification email sent successfully via Zoho.');
+        console.log("✅ Notification email sent successfully via Zoho.");
     } catch (emailError) {
         console.error("❌ Email Send Error:", emailError);
-        // We log the error but still send a success response to the user,
-        // because their message was saved successfully.
+        // Still return success since DB save worked
     }
 
     // --- Step 3: Respond to the frontend ---
