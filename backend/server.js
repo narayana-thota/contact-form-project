@@ -1,4 +1,3 @@
-
 import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
@@ -14,7 +13,10 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // --- MongoDB Connection ---
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
     .then(() => console.log("✅ Successfully connected to MongoDB Atlas!"))
     .catch(err => console.error("❌ MongoDB connection error:", err));
 
@@ -33,11 +35,20 @@ const Contact = mongoose.model("Contact", contactSchema);
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: Number(process.env.EMAIL_PORT),
-    secure: true, // SSL required for port 465
+    secure: Number(process.env.EMAIL_PORT) === 465, // Secure only if using port 465
     auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS, // App-specific password from Zoho
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // App password from Zoho
     },
+});
+
+// Verify transporter at startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("❌ Email transporter verification failed:", error);
+    } else {
+        console.log("✅ Email transporter ready to send messages");
+    }
 });
 
 // --- API Routes ---
@@ -55,8 +66,9 @@ app.post("/contact", async (req, res) => {
     }
 
     // --- Step 1: Save submission to the database ---
+    let contact;
     try {
-        const contact = new Contact({ name, email, phone, message });
+        contact = new Contact({ name, email, phone, message });
         await contact.save();
         console.log("✅ Contact submission saved to MongoDB.");
     } catch (dbError) {
@@ -66,10 +78,10 @@ app.post("/contact", async (req, res) => {
 
     // --- Step 2: Send the email notification via Zoho ---
     const mailOptions = {
-        from: process.env.EMAIL_USER, // Must always be your verified Zoho email
-        to: process.env.PORTFOLIO_OWNER_EMAIL, // Your personal inbox
+        from: process.env.EMAIL_USER, // Your Zoho email
+        to: process.env.PORTFOLIO_OWNER_EMAIL, // Your receiving email
         subject: `🚀 New Contact Form Submission from ${name}`,
-        replyTo: email, // Visitor’s email so you can reply directly
+        replyTo: email, // Lets you reply directly to sender
         html: `
             <h2>You have a new message from your portfolio:</h2>
             <hr>
@@ -77,10 +89,12 @@ app.post("/contact", async (req, res) => {
             <ul>
                 <li><strong>Name:</strong> ${name}</li>
                 <li><strong>Email:</strong> <a href="mailto:${email}">${email}</a></li>
-                <li><strong>Phone:</strong> ${phone}</li>
+                <li><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></li>
             </ul>
             <h3>Message:</h3>
             <p>${message}</p>
+            <hr>
+            <small>Submitted at: ${new Date(contact.submittedAt).toLocaleString()}</small>
         `,
     };
 
@@ -89,7 +103,7 @@ app.post("/contact", async (req, res) => {
         console.log("✅ Notification email sent successfully via Zoho.");
     } catch (emailError) {
         console.error("❌ Email Send Error:", emailError);
-        // Still return success since DB save worked
+        // Still respond success since DB save worked
     }
 
     // --- Step 3: Respond to the frontend ---
