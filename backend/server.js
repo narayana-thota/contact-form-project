@@ -2,7 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import axios from "axios"; // ✅ We now use Axios to make API calls, not Nodemailer
+import axios from "axios"; // We use Axios to make API calls
 import cors from "cors";
 
 dotenv.config();
@@ -27,11 +27,8 @@ const contactSchema = new mongoose.Schema({
 });
 const Contact = mongoose.model("Contact", contactSchema);
 
-// --- Zoho API Authentication ---
-// This section handles our new, advanced authentication flow.
-let zohoAccessToken = null; // We will store the temporary "one-hour pass" here.
-
-// This function uses your permanent Refresh Token to get a temporary Access Token.
+// --- Zoho API Function ---
+// This function gets a brand new, fresh Access Token every time it's called.
 const getZohoAccessToken = async () => {
     try {
         const response = await axios.post(
@@ -46,11 +43,11 @@ const getZohoAccessToken = async () => {
                 }
             }
         );
-        zohoAccessToken = response.data.access_token;
         console.log("✅ Successfully obtained new Zoho Access Token.");
+        return response.data.access_token; // ✅ Return the token directly
     } catch (error) {
         console.error("❌ Failed to get Zoho Access Token:", error.response ? error.response.data : error.message);
-        zohoAccessToken = null;
+        return null; // ✅ Return null on failure
     }
 };
 
@@ -63,7 +60,6 @@ app.get('/', (req, res) => {
 app.post('/contact', async (req, res) => {
     const { name, email, phone, message } = req.body;
 
-    // Basic validation
     if (!name || !email || !phone || !message) {
         return res.status(400).json({ error: "All fields are required." });
     }
@@ -80,19 +76,16 @@ app.post('/contact', async (req, res) => {
 
     // --- Step 2: Send the email notification using the Zoho API ---
     try {
-        if (!zohoAccessToken) {
-            console.log("Access Token not found, requesting a new one...");
-            await getZohoAccessToken();
-            if (!zohoAccessToken) {
-                throw new Error("Could not obtain Access Token to send email.");
-            }
+        // Get a fresh Access Token for this specific request.
+        const accessToken = await getZohoAccessToken();
+
+        if (!accessToken) {
+            throw new Error("Could not obtain Access Token to send email.");
         }
-        
-        // This is the clever, two-step trick: Create a draft, then send it.
-        const fromAddress = `narayanathota@zohomail.in`; // Your verified Zoho email
+
+        const fromAddress = `narayanathota@zohomail.in`;
         const toAddress = process.env.PORTFOLIO_OWNER_EMAIL;
 
-        // The email content must be in a special format called MIME.
         const mimeContent = [
             `From: "Portfolio Notification" <${fromAddress}>`,
             `To: ${toAddress}`,
@@ -106,46 +99,32 @@ app.post('/contact', async (req, res) => {
             `<h3>Message:</h3><p>${message}</p>`
         ].join('\r\n');
 
-        // First, create the draft.
+        // We still use the advanced two-step draft and send process
         const createDraftResponse = await axios.post(
             `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
             { content: mimeContent },
-            { headers: { Authorization: `Zoho-oauthtoken ${zohoAccessToken}` } }
+            { headers: { Authorization: `Zoho-oauthtoken ${accessToken}` } }
         );
-        
-        console.log('✅ Draft created successfully.');
-        
-        // Second, send the draft.
+
         const messageId = createDraftResponse.data.data.id;
         await axios.post(
             `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages/${messageId}/send`,
             {},
-            { headers: { Authorization: `Zoho-oauthtoken ${zohoAccessToken}` } }
+            { headers: { Authorization: `Zoho-oauthtoken ${accessToken}` } }
         );
 
         console.log('✅ Notification email sent successfully via Zoho API.');
 
     } catch (emailError) {
         console.error("❌ Zoho API Email Send Error:", emailError.response ? emailError.response.data : emailError.message);
-        // If the token expired, try one more time.
-        if (emailError.response && emailError.response.data.data.errorCode === 'INVALID_OAUTHTOKEN') {
-            console.log("Access Token expired, refreshing and retrying...");
-            zohoAccessToken = null; // Clear the old token
-            // Here you could add logic to retry sending the email one more time.
-        }
     }
 
-    // --- Step 3: Respond to the frontend ---
     res.status(201).json({ success: true, message: "Form submitted successfully!" });
 });
 
 
 // --- Start Server ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    // Get the first Access Token when the server starts.
-    await getZohoAccessToken(); 
-    // This will automatically refresh the token every 50 minutes.
-    setInterval(getZohoAccessToken, 50 * 60 * 1000); 
 });
