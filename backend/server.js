@@ -47,7 +47,7 @@ const Contact = mongoose.model("Contact", contactSchema);
 const getZohoAccessToken = async () => {
     try {
         const response = await axios.post(
-            `https://accounts.zoho.in/oauth/v2/token`, // This stays .in because it's the regional auth server
+            `https://accounts.zoho.in/oauth/v2/token`,
             null,
             {
                 params: {
@@ -110,18 +110,18 @@ app.post('/contact', async (req, res) => {
             `<h3>Message:</h3><p>${message}</p>`
         ].join('\r\n');
 
-        // ✅ CHANGE 1: Using the global .com API endpoint
+        // ✅ THE FINAL FIX: Using the correct .in API endpoint
         const createDraftResponse = await axios.post(
-            `https://mail.zoho.com/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
+            `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
             { content: mimeContent },
             { headers: { Authorization: `Zoho-oauthtoken ${accessToken}` } }
         );
 
         const messageId = createDraftResponse.data.data.id;
         
-        // ✅ CHANGE 2: Using the global .com API endpoint
+        // ✅ THE FINAL FIX: Using the correct .in API endpoint
         await axios.post(
-            `https://mail.zoho.com/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages/${messageId}/send`,
+            `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages/${messageId}/send`,
             {},
             { headers: { Authorization: `Zoho-oauthtoken ${accessToken}` } }
         );
@@ -141,3 +141,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
+
