@@ -2,17 +2,37 @@ import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import axios from "axios"; // We use Axios to make API calls
+import axios from "axios";
 import cors from "cors";
 
 dotenv.config();
 const app = express();
+
+// --- ✅ Pre-Flight Check for Environment Variables ---
+// This will check if all required secrets are loaded before the server starts.
+const requiredEnvVars = [
+    'MONGODB_URI',
+    'ZOHO_CLIENT_ID',
+    'ZOHO_CLIENT_SECRET',
+    'ZOHO_REFRESH_TOKEN',
+    'ZOHO_ACCOUNT_ID',
+    'PORTFOLIO_OWNER_EMAIL'
+];
+
+for (const varName of requiredEnvVars) {
+    if (!process.env[varName]) {
+        console.error(`❌ FATAL ERROR: Environment variable ${varName} is not defined.`);
+        process.exit(1); // Stop the server if a secret is missing
+    }
+}
+
 
 // --- Middleware ---
 app.use(cors());
 app.use(bodyParser.json());
 
 // --- MongoDB Connection ---
+// The old options are no longer needed in modern Mongoose versions.
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("✅ Successfully connected to MongoDB Atlas!"))
     .catch(err => console.error("❌ MongoDB connection error:", err));
@@ -44,10 +64,10 @@ const getZohoAccessToken = async () => {
             }
         );
         console.log("✅ Successfully obtained new Zoho Access Token.");
-        return response.data.access_token; // ✅ Return the token directly
+        return response.data.access_token;
     } catch (error) {
         console.error("❌ Failed to get Zoho Access Token:", error.response ? error.response.data : error.message);
-        return null; // ✅ Return null on failure
+        return null;
     }
 };
 
@@ -76,14 +96,12 @@ app.post('/contact', async (req, res) => {
 
     // --- Step 2: Send the email notification using the Zoho API ---
     try {
-        // Get a fresh Access Token for this specific request.
         const accessToken = await getZohoAccessToken();
-
         if (!accessToken) {
             throw new Error("Could not obtain Access Token to send email.");
         }
 
-        const fromAddress = `narayanathota@zohomail.in`;
+        const fromAddress = `narayanathota@zohomail.in`; // This must match your Zoho account email
         const toAddress = process.env.PORTFOLIO_OWNER_EMAIL;
 
         const mimeContent = [
@@ -99,7 +117,6 @@ app.post('/contact', async (req, res) => {
             `<h3>Message:</h3><p>${message}</p>`
         ].join('\r\n');
 
-        // We still use the advanced two-step draft and send process
         const createDraftResponse = await axios.post(
             `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
             { content: mimeContent },
@@ -128,3 +145,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
+
