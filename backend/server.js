@@ -8,8 +8,7 @@ import cors from "cors";
 dotenv.config();
 const app = express();
 
-// --- ✅ Pre-Flight Check for Environment Variables ---
-// This will check if all required secrets are loaded before the server starts.
+// --- Pre-Flight Check for Environment Variables ---
 const requiredEnvVars = [
     'MONGODB_URI',
     'ZOHO_CLIENT_ID',
@@ -18,21 +17,18 @@ const requiredEnvVars = [
     'ZOHO_ACCOUNT_ID',
     'PORTFOLIO_OWNER_EMAIL'
 ];
-
 for (const varName of requiredEnvVars) {
     if (!process.env[varName]) {
         console.error(`❌ FATAL ERROR: Environment variable ${varName} is not defined.`);
-        process.exit(1); // Stop the server if a secret is missing
+        process.exit(1);
     }
 }
-
 
 // --- Middleware ---
 app.use(cors());
 app.use(bodyParser.json());
 
 // --- MongoDB Connection ---
-// The old options are no longer needed in modern Mongoose versions.
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log("✅ Successfully connected to MongoDB Atlas!"))
     .catch(err => console.error("❌ MongoDB connection error:", err));
@@ -48,11 +44,10 @@ const contactSchema = new mongoose.Schema({
 const Contact = mongoose.model("Contact", contactSchema);
 
 // --- Zoho API Function ---
-// This function gets a brand new, fresh Access Token every time it's called.
 const getZohoAccessToken = async () => {
     try {
         const response = await axios.post(
-            `https://accounts.zoho.in/oauth/v2/token`,
+            `https://accounts.zoho.in/oauth/v2/token`, // This stays .in because it's the regional auth server
             null,
             {
                 params: {
@@ -84,7 +79,6 @@ app.post('/contact', async (req, res) => {
         return res.status(400).json({ error: "All fields are required." });
     }
 
-    // --- Step 1: Save submission to the database ---
     try {
         const contact = new Contact({ name, email, phone, message });
         await contact.save();
@@ -94,14 +88,13 @@ app.post('/contact', async (req, res) => {
         return res.status(500).json({ error: "Failed to save your message. Please try again." });
     }
 
-    // --- Step 2: Send the email notification using the Zoho API ---
     try {
         const accessToken = await getZohoAccessToken();
         if (!accessToken) {
             throw new Error("Could not obtain Access Token to send email.");
         }
 
-        const fromAddress = `narayanathota@zohomail.in`; // This must match your Zoho account email
+        const fromAddress = `narayanathota@zohomail.in`;
         const toAddress = process.env.PORTFOLIO_OWNER_EMAIL;
 
         const mimeContent = [
@@ -117,15 +110,18 @@ app.post('/contact', async (req, res) => {
             `<h3>Message:</h3><p>${message}</p>`
         ].join('\r\n');
 
+        // ✅ CHANGE 1: Using the global .com API endpoint
         const createDraftResponse = await axios.post(
-            `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
+            `https://mail.zoho.com/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
             { content: mimeContent },
             { headers: { Authorization: `Zoho-oauthtoken ${accessToken}` } }
         );
 
         const messageId = createDraftResponse.data.data.id;
+        
+        // ✅ CHANGE 2: Using the global .com API endpoint
         await axios.post(
-            `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages/${messageId}/send`,
+            `https://mail.zoho.com/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages/${messageId}/send`,
             {},
             { headers: { Authorization: `Zoho-oauthtoken ${accessToken}` } }
         );
@@ -145,4 +141,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
-
