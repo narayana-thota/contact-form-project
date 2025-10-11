@@ -96,18 +96,16 @@ app.post("/contact", async (req, res) => {
     await axios.post(
       `${process.env.ZOHO_API_URL}/${process.env.ZOHO_ACCOUNT_ID}/messages`,
       {
-        message: {
-          fromAddress: process.env.EMAIL_USER,
-          toAddress: process.env.PORTFOLIO_OWNER_EMAIL,
-          subject: `🚀 New Contact from ${name}`,
-          content: `<h2>New portfolio contact:</h2>
-                    <ul>
-                      <li><strong>Name:</strong> ${name}</li>
-                      <li><strong>Email:</strong> ${email}</li>
-                      <li><strong>Phone:</strong> ${phone}</li>
-                    </ul>
-                    <h3>Message:</h3><p>${message}</p>`
-        }
+        fromAddress: process.env.EMAIL_USER,
+        toAddress: process.env.PORTFOLIO_OWNER_EMAIL,
+        subject: `🚀 New Contact from ${name}`,
+        content: `<h2>New portfolio contact:</h2>
+                  <ul>
+                    <li><strong>Name:</strong> ${name}</li>
+                    <li><strong>Email:</strong> ${email}</li>
+                    <li><strong>Phone:</strong> ${phone}</li>
+                  </ul>
+                  <h3>Message:</h3><p>${message}</p>`
       },
       { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
     );
