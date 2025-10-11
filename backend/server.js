@@ -15,7 +15,9 @@ const requiredEnvVars = [
   "ZOHO_CLIENT_SECRET",
   "ZOHO_REFRESH_TOKEN",
   "ZOHO_ACCOUNT_ID",
-  "PORTFOLIO_OWNER_EMAIL"
+  "EMAIL_USER",
+  "PORTFOLIO_OWNER_EMAIL",
+  "ZOHO_API_URL"
 ];
 for (const v of requiredEnvVars) {
   if (!process.env[v]) {
@@ -76,6 +78,7 @@ app.post("/contact", async (req, res) => {
   if (!name || !email || !phone || !message)
     return res.status(400).json({ error: "All fields are required." });
 
+  // 1️⃣ Save contact to MongoDB
   try {
     const contact = new Contact({ name, email, phone, message });
     await contact.save();
@@ -85,38 +88,27 @@ app.post("/contact", async (req, res) => {
     return res.status(500).json({ error: "Failed to save your message." });
   }
 
+  // 2️⃣ Send Email via Zoho API
   try {
     const token = await getZohoAccessToken();
     if (!token) throw new Error("Could not obtain access token");
 
-    const from = "narayanathota@zohomail.in";
-    const to = process.env.PORTFOLIO_OWNER_EMAIL;
-    const mime = [
-      `From: "Portfolio Notification" <${from}>`,
-      `To: ${to}`,
-      `Reply-To: ${email}`,
-      `Subject: 🚀 New Contact from ${name}`,
-      `Content-Type: text/html; charset=utf-8`,
-      ``,
-      `<h2>New portfolio contact:</h2><hr>
-       <ul><li><strong>Name:</strong> ${name}</li>
-       <li><strong>Email:</strong> ${email}</li>
-       <li><strong>Phone:</strong> ${phone}</li></ul>
-       <h3>Message:</h3><p>${message}</p>`
-    ].join("\r\n");
-
-    // Create and Send Message via Zoho API
-    const draft = await axios.post(
-      `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages`,
-      { content: mime },
-      { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
-    );
-
-    const messageId = draft.data.data.id;
-
     await axios.post(
-      `https://mail.zoho.in/api/accounts/${process.env.ZOHO_ACCOUNT_ID}/messages/${messageId}/send`,
-      {},
+      `${process.env.ZOHO_API_URL}/${process.env.ZOHO_ACCOUNT_ID}/messages`,
+      {
+        message: {
+          fromAddress: process.env.EMAIL_USER,
+          toAddress: process.env.PORTFOLIO_OWNER_EMAIL,
+          subject: `🚀 New Contact from ${name}`,
+          content: `<h2>New portfolio contact:</h2>
+                    <ul>
+                      <li><strong>Name:</strong> ${name}</li>
+                      <li><strong>Email:</strong> ${email}</li>
+                      <li><strong>Phone:</strong> ${phone}</li>
+                    </ul>
+                    <h3>Message:</h3><p>${message}</p>`
+        }
+      },
       { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
     );
 
