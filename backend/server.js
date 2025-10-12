@@ -2,8 +2,8 @@ import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import axios from "axios";
 import cors from "cors";
+import sgMail from "@sendgrid/mail";
 
 dotenv.config();
 const app = express();
@@ -11,13 +11,9 @@ const app = express();
 // --- Check Environment Variables ---
 const requiredEnvVars = [
   "MONGODB_URI",
-  "ZOHO_CLIENT_ID",
-  "ZOHO_CLIENT_SECRET",
-  "ZOHO_REFRESH_TOKEN",
-  "ZOHO_ACCOUNT_ID",
-  "EMAIL_USER",
-  "PORTFOLIO_OWNER_EMAIL",
-  "ZOHO_API_URL"
+  "SENDGRID_API_KEY",
+  "SENDGRID_VERIFIED_SENDER",
+  "PORTFOLIO_OWNER_EMAIL"
 ];
 for (const v of requiredEnvVars) {
   if (!process.env[v]) {
@@ -45,31 +41,11 @@ const contactSchema = new mongoose.Schema({
 });
 const Contact = mongoose.model("Contact", contactSchema);
 
-// --- Function: Get Zoho Access Token ---
-const getZohoAccessToken = async () => {
-  try {
-    const res = await axios.post(
-      "https://accounts.zoho.in/oauth/v2/token",
-      null,
-      {
-        params: {
-          refresh_token: process.env.ZOHO_REFRESH_TOKEN,
-          client_id: process.env.ZOHO_CLIENT_ID,
-          client_secret: process.env.ZOHO_CLIENT_SECRET,
-          grant_type: "refresh_token"
-        }
-      }
-    );
-    console.log("✅ Successfully obtained new Zoho Access Token.");
-    return res.data.access_token;
-  } catch (error) {
-    console.error("❌ Failed to get Zoho Access Token:", error.response?.data || error.message);
-    return null;
-  }
-};
+// --- Configure SendGrid ---
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// --- API ---
-app.get("/", (req, res) => res.send("🚀 Portfolio Contact API running!"));
+// --- Root API ---
+app.get("/", (req, res) => res.send("🚀 Portfolio Contact API (SendGrid) running!"));
 
 // --- POST /contact ---
 app.post("/contact", async (req, res) => {
@@ -88,31 +64,34 @@ app.post("/contact", async (req, res) => {
     return res.status(500).json({ error: "Failed to save your message." });
   }
 
-  // 2️⃣ Send Email via Zoho API
+  // 2️⃣ Send Email via SendGrid
   try {
-    const token = await getZohoAccessToken();
-    if (!token) throw new Error("Could not obtain access token");
+    const msg = {
+      to: process.env.PORTFOLIO_OWNER_EMAIL, // Your portfolio email
+      from: process.env.SENDGRID_VERIFIED_SENDER, // Verified sender in SendGrid
+      subject: `🚀 New Contact from ${name}`,
+      text: `
+        Name: ${name}
+        Email: ${email}
+        Phone: ${phone}
+        Message: ${message}
+      `,
+      html: `
+        <h2>New Portfolio Contact:</h2><hr>
+        <ul>
+          <li><strong>Name:</strong> ${name}</li>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Phone:</strong> ${phone}</li>
+        </ul>
+        <h3>Message:</h3>
+        <p>${message}</p>
+      `
+    };
 
-    await axios.post(
-      `${process.env.ZOHO_API_URL}/${process.env.ZOHO_ACCOUNT_ID}/messages`,
-      {
-        fromAddress: process.env.EMAIL_USER,
-        toAddress: process.env.PORTFOLIO_OWNER_EMAIL,
-        subject: `🚀 New Contact from ${name}`,
-        content: `<h2>New portfolio contact:</h2>
-                  <ul>
-                    <li><strong>Name:</strong> ${name}</li>
-                    <li><strong>Email:</strong> ${email}</li>
-                    <li><strong>Phone:</strong> ${phone}</li>
-                  </ul>
-                  <h3>Message:</h3><p>${message}</p>`
-      },
-      { headers: { Authorization: `Zoho-oauthtoken ${token}` } }
-    );
-
-    console.log("✅ Email sent successfully via Zoho API!");
+    await sgMail.send(msg);
+    console.log("✅ Email sent successfully via SendGrid!");
   } catch (error) {
-    console.error("❌ Zoho API Email Send Error:", error.response?.data || error.message);
+    console.error("❌ SendGrid Email Send Error:", error.response?.body || error.message);
   }
 
   res.status(201).json({ success: true, message: "Form submitted successfully!" });
