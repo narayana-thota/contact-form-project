@@ -11,7 +11,7 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
         message: document.getElementById("message").value,
     };
 
-    fetch("https://contactform-backend-19.onrender.com/api/contact", {
+    fetch("https://contact-form-project-1-2qi5.onrender.com/", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
