@@ -1,48 +1,42 @@
+
 document.getElementById("contactForm").addEventListener("submit", function (e) {
-    e.preventDefault(); // Prevent form from submitting the default way
+    e.preventDefault();
 
-    const loadingMessage = document.getElementById("loadingMessage");
-    const successMessage = document.getElementById("successMessage");
-    const contactForm = document.getElementById("contactForm");
-
-    // Hide any previous success message and show loading spinner
-    successMessage.classList.add("hidden");
-    loadingMessage.classList.remove("hidden");
+    document.getElementById("loadingMessage").classList.remove("hidden");
 
     const formData = {
-        name: document.getElementById("name").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
-        message: document.getElementById("message").value.trim(),
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        message: document.getElementById("message").value,
     };
 
-    // Updated with your new Render domain + /api/contact endpoint
-    fetch("https://contact-form-project-1-2qi5.onrender.com/api/contact", {
+    fetch("https://contact-form-project-1-2qi5.onrender.com/", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
     })
-    .then(async (response) => {
-        const data = await response.json();
+    .then((response) => {
         if (!response.ok) {
-            throw new Error(data.message || "Failed to submit form");
+            throw new Error("Failed to submit form");
         }
-        return data;
+        return response.json();
     })
     .then((data) => {
-        loadingMessage.classList.add("hidden");
+        document.getElementById("loadingMessage").classList.add("hidden");
+
         if (data.success) {
-            successMessage.classList.remove("hidden");
-            contactForm.reset();
+            document.getElementById("successMessage").classList.remove("hidden");
+            document.getElementById("contactForm").reset();
         } else {
-            alert("Error: " + (data.message || "Submission failed."));
+            alert("Error: " + data.message);
         }
     })
     .catch((error) => {
-        loadingMessage.classList.add("hidden");
+        document.getElementById("loadingMessage").classList.add("hidden");
         console.error("Error:", error);
-        alert(error.message || "An error occurred. Please try again later.");
+        alert("Something went wrong. Please try again.");
     });
 });
