@@ -3,8 +3,7 @@
  * For deployment, replace the URL below with your actual deployed backend origin.
  * Do not add /contact here; the route is appended below.
  */
-const API_BASE_URL = "http://localhost:5000";
-
+const API_BASE_URL = "https://contact-form-project-1-2qi5.onrender.com/"
 const contactForm = document.getElementById("contactForm");
 const loadingMessage = document.getElementById("loadingMessage");
 const successMessage = document.getElementById("successMessage");
