@@ -1,9 +1,12 @@
+
 /*
  * Local development: the backend defaults to http://localhost:5000.
  * For deployment, replace the URL below with your actual deployed backend origin.
  * Do not add /contact here; the route is appended below.
+ * script.js file
  */
-const API_BASE_URL = "https://contact-form-project-1-2qi5.onrender.com/"
+
+const API_BASE_URL = "https://contact-form-project-1-2qi5.onrender.com";
 const contactForm = document.getElementById("contactForm");
 const loadingMessage = document.getElementById("loadingMessage");
 const successMessage = document.getElementById("successMessage");
