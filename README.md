@@ -52,7 +52,7 @@ Example Connection String:
 ## 📦 Deployment
 The project is deployed using Render for online accessibility.
 
-Live Demo Link: [https://guileless-zuccutto-8d3554.netlify.app/]
+Live Demo Link: [https://contactform-project.netlify.app/]
 ## 👨‍💻 Developed BY
 Thota Om Sada Siva Venkata Narayana
 ## 📄 License
