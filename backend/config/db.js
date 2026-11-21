@@ -1,5 +1,12 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch(err => console.error("MongoDB connection failed:", err));
+export async function connectDB() {
+    const mongoUri = process.env.MONGODB_URI;
+
+    if (!mongoUri) {
+        throw new Error("Missing required environment variable: MONGODB_URI");
+    }
+
+    await mongoose.connect(mongoUri);
+    console.log("MongoDB connected successfully.");
+}

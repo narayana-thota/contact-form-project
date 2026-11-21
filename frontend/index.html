@@ -5,30 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us</title>
     <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="form-container">
+    <main class="form-container">
         <h1>Contact Us</h1>
-        <!-- Updated action URL to the deployed backend -->
-        <form id="contactForm" method="POST" action="https://contactform-backend-19.onrender.com/api/contact">
+
+        <form id="contactForm">
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="Your Name" required>
+            <input type="text" id="name" name="name"
+                   placeholder="Your Name" maxlength="100" required>
 
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Your Email" required>
+            <input type="email" id="email" name="email"
+                   placeholder="Your Email" maxlength="254" required>
 
             <label for="phone">Phone:</label>
-            <input type="text" id="phone" name="phone" placeholder="Your Phone Number" required>
+            <input type="tel" id="phone" name="phone"
+                   placeholder="Your Phone Number" maxlength="30" required>
 
             <label for="message">Message:</label>
-            <textarea id="message" name="message" rows="5" placeholder="Your Message" required></textarea>
+            <textarea id="message" name="message" rows="5"
+                      placeholder="Your Message" maxlength="5000" required></textarea>
 
-            <button type="submit">Submit</button>
+            <button type="submit" id="submitButton">Submit</button>
         </form>
-        <!-- Added id to success message -->
-        <p id="successMessage" class="hidden">Thank you! Your message has been sent.</p>
-    </div>
-    <!-- Ensure the updated script.js is loaded -->
-    <script src="script.js"></script>
+
+        <p id="loadingMessage" class="status hidden" role="status" aria-live="polite">
+            Submitting your message...
+        </p>
+        <p id="successMessage" class="status success hidden" role="status" aria-live="polite">
+            Thank you! Your message has been saved.
+        </p>
+        <p id="errorMessage" class="status error hidden" role="alert" aria-live="assertive"></p>
+    </main>
 </body>
 </html>
